@@ -1,56 +1,58 @@
 #include <SFML/Graphics.hpp>
 
+#include<string>
 #include<iostream>
 #include<vector>
-#include"algs.h"
+#include"UI.h"
+#include"GameLife.h"
+
 
 int main()
 {
+    int step = 0;
     //change random seed
     std::srand(std::time(0));
+    
     float fps = 50.f;
     sf::Clock looptimer;
 
     bool start = false;
-    int standartscreensize = 800;
+    int startscreensize[2] = { 1000,800 };
+    int standartscreensize[2] = { startscreensize[0],startscreensize[1]};
     int cellnum = 40;
-    int cellsize=(int)standartscreensize/cellnum;
-    standartscreensize = cellsize * cellnum;
+    GameLife Gl(cellnum);
+    int cellsize=(int)standartscreensize[1]/cellnum;
+   
+    standartscreensize[1] = cellsize * cellnum;
 
-    sf::RenderWindow window(sf::VideoMode(standartscreensize, standartscreensize), "Game life");
-    
+    sf::RenderWindow window(sf::VideoMode(standartscreensize[0], standartscreensize[1]), "Game life", sf::Style::Close);
     std::vector<sf::RectangleShape> cells;
     std::vector<sf::RectangleShape> grid;
 
+    ActionWindow game(standartscreensize[0]-standartscreensize[1], 0, standartscreensize[1], standartscreensize[1]);
+    Button btn("start", 20, 10, 10, "stop",start);
+    sf::Font font; font.loadFromFile("arial.ttf");
+    sf::Text counter(("step:"+std::to_string(step)),font,20);
+    counter.setPosition(sf::Vector2f(0,standartscreensize[1]-25));
+
+
+    game.createField(Gl.actionlist, cellnum, cellsize);
     std::vector<std::vector<int>> actionlist;
-
-    //creating grid
-    for (int x = 0; x <= cellnum; x++) {
-        sf::RectangleShape line1(sf::Vector2f(standartscreensize, 5));//vertical line
-        line1.setPosition(sf::Vector2f(cellsize * x, 0));
-        line1.setFillColor(sf::Color::Black);
-        sf::RectangleShape line2(sf::Vector2f(standartscreensize, 5));//horizontal line
-        line2.setPosition(sf::Vector2f(0, cellsize * x));
-        line2.setFillColor(sf::Color::Black);
-        line1.rotate(90);
-        grid.push_back(line1);
-        grid.push_back(line2);
-
-    }
     
-    //actionlist random filling 
-    actionlist.resize(cellnum);
-    for (int x = 0; x < cellnum; x++) {
-        for (int y = 0; y < cellnum; y++) {
-            actionlist[x].push_back(rand() % 2);
-        }
-    }
+    //creating grid
+    grid = game.createGrid(standartscreensize, cellsize,cellnum);
+    
+    //actionlist random filling APPENDED IN THE CLASS
+    Gl.createGrid();
+   
 
     //filling cells array;
-    cells = createField(actionlist,cellsize,cellnum);
+    cells = game.createField(Gl.actionlist,cellsize,cellnum);
     
     while (window.isOpen())
     {
+        //save after resize
+       
         sf::Vector2u size = window.getSize();
         sf::Event event;
         while (window.pollEvent(event))
@@ -60,31 +62,39 @@ int main()
             if (event.type == sf::Event::KeyPressed && sf::Keyboard::Space)start = !start;
 
             if (event.type == sf::Event::MouseButtonPressed) {
-                int x = (int)sf::Mouse::getPosition(window).x/cellsize, y = (int)sf::Mouse::getPosition(window).y/cellsize;
-                
-                //std::cout << x << " " << y << std::endl;
-                
-                //change cellmode;
-                actionlist[x][y] = (actionlist[x][y]+1) % 2;
-              
-                std::cout << getNeighbour(x,y, actionlist)<<"--"<<x<<":"<<y<<"\n";
-                
+                int Gx = sf::Mouse::getPosition(window).x;
+                int Gy = sf::Mouse::getPosition(window).y;
+                btn.pressed(Gx, Gy);
+
+                int Dx = Gx - game.getX();
+                int Dy = Gy - game.getY();
+                if (Dx >= 0 && Dy >= 0) {
+                    int x = (int)(Dx) / cellsize, y = (int)(Dy) / cellsize;
+                    //change cellmode;
+                    Gl.actionlist[x][y] = (Gl.actionlist[x][y] + 1) % 2;
+                }
             }
         }
         
         
         if (start) {
-                actionlist =nextStep(actionlist);
+                actionlist =Gl.nextStep();
+                step++;
+                counter.setString("step:" + std::to_string(step));
         }
-        cells = createField(actionlist, cellsize, cellnum);
+        cells = game.createField(Gl.actionlist, cellsize, cellnum);
+        window.clear();
+       
+        //DRAW mb tmp but I dk how do it better.
+        for (int i = 0; i < cells.size(); i++) window.draw(cells[i]);
+        for (int i = 0; i < grid.size(); i++) window.draw(grid[i]);
+        window.draw(game.getCurrentWindow());
         
 
-        window.clear();
-        for(int i=0;i<cellnum*cellnum;i++)
-            window.draw(cells[i]);
-        for (int i = 0; i < grid.size(); i++)
-            window.draw(grid[i]);
-
+        window.draw(btn);
+        window.draw(counter);
+        
+        
         sf::Int32 frame_duration = looptimer.getElapsedTime().asMilliseconds();
         sf::Int32 time_to_sleep = int(1000.f / fps) - frame_duration;
         if (time_to_sleep > 0) {

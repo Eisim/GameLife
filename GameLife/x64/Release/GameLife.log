@@ -1,0 +1,22 @@
+﻿  main.cpp
+c:\users\eisim\source\repos\gamelife\gamelife\main.cpp(26): warning C4244: аргумент: преобразование "int" в "T", возможна потеря данных
+          with
+          [
+              T=float
+          ]
+c:\users\eisim\source\repos\gamelife\gamelife\main.cpp(27): warning C4244: аргумент: преобразование "int" в "T", возможна потеря данных
+          with
+          [
+              T=float
+          ]
+c:\users\eisim\source\repos\gamelife\gamelife\main.cpp(29): warning C4244: аргумент: преобразование "int" в "T", возможна потеря данных
+          with
+          [
+              T=float
+          ]
+c:\users\eisim\source\repos\gamelife\gamelife\main.cpp(30): warning C4244: аргумент: преобразование "int" в "T", возможна потеря данных
+          with
+          [
+              T=float
+          ]
+LINK : fatal error LNK1181: не удается открыть входной файл "sfml-graphics.lib"
